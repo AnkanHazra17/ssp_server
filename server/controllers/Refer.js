@@ -16,7 +16,7 @@ exports.generateReferUrl = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Please Check Your Mail",
-      referalUrl: `https://sspports.xyz/accept-referal/${id}`,
+      referalUrl: `https://dlftrade.in/accept-referal/${id}`,
     });
   } catch (error) {
     console.log(error);
