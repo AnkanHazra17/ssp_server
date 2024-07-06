@@ -512,3 +512,33 @@ exports.allPaymentHistory = async (req, res) => {
     });
   }
 };
+
+// Update users balance
+exports.updateUserBalance = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const { amount } = req.body;
+
+    const user = await User.findByIdAndUpdate(userId, {
+      withrawalAmount: amount,
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update users balance",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Users balance updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error updating users balance",
+    });
+  }
+};

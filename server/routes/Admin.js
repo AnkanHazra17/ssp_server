@@ -17,6 +17,7 @@ const {
   deleteLavelUsers,
   rejectWithdrawalRequest,
   allPaymentHistory,
+  updateUserBalance,
 } = require("../controllers/Admin");
 
 router.get("/get-revenue-data", auth, isAdmin, getRevenueDetails);
@@ -36,5 +37,8 @@ router.put("/approve-req", auth, isAdmin, approveWithdrawalRequest);
 router.put("/reject-req", auth, isAdmin, rejectWithdrawalRequest);
 router.put("/delete-child", auth, isAdmin, deleteLavelUsers);
 router.get("/all-payment-history", auth, isAdmin, allPaymentHistory);
+
+// update user balance
+router.put("/update-balance", auth, isAdmin, updateUserBalance);
 
 module.exports = router;
