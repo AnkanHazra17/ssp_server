@@ -115,6 +115,7 @@ exports.acceptReferal = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "user already registered with us",
+        existingUser,
       });
     }
 
@@ -197,10 +198,21 @@ exports.acceptReferal = async (req, res) => {
   }
 };
 
+const updateWeeklySalaryStatus = async (userId, status) => {
+  try {
+    await User.findByIdAndUpdate(userId, {
+      "getWeekySalary.isGetWeeklySalary": status,
+      "getWeekySalary.weeklySalaryUpdatedAt": status ? new Date() : null,
+    });
+  } catch (err) {
+    console.error("Error updating weekly salary status:", err);
+  }
+};
+
 // Check for added members
 exports.checkAddedMembers = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const userId = req.user.id;
     const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({
@@ -209,58 +221,76 @@ exports.checkAddedMembers = async (req, res) => {
       });
     }
 
-    if (!user.brokerLevel === "none" && !user.isGetWeekySalary) {
-      if (user.brokerLevel === "vip_1") {
-        if (user.membersAdded.length >= 2) {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const pipeline = [
+      // Unwind the membersAdded array
+      { $unwind: "$membersAdded" },
+      // Match documents where dateAdded is within the last week
+      { $match: { "membersAdded.dateAdded": { $gte: oneWeekAgo } } },
+      // Group by null to get a count of all matched documents
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+        },
+      },
+    ];
+
+    const results = await User.aggregate(pipeline).exec();
+    const addedMembersLastWeek = results.length > 0 ? results[0].count : 0;
+
+    if (user.brokerLevel === "vip_1") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 2) {
           user.withrawalAmount += 700;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
-      } else if (user.brokerLevel === "vip_2") {
-        if (user.membersAdded.length >= 5) {
+      }
+    } else if (user.brokerLevel === "vip_2") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 5) {
           user.withrawalAmount += 1000;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
-      } else if (user.brokerLevel === "vip_3") {
-        if (user.membersAdded.length >= 8) {
+      }
+    } else if (user.brokerLevel === "vip_3") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 8) {
           user.withrawalAmount += 2000;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
-      } else if (user.brokerLevel === "vip_4") {
-        if (user.membersAdded.length >= 10) {
+      }
+    } else if (user.brokerLevel === "vip_4") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 10) {
           user.withrawalAmount += 3000;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
-      } else if (user.brokerLevel === "vip_5") {
-        if (user.membersAdded.length >= 15) {
+      }
+    } else if (user.brokerLevel === "vip_5") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 15) {
           user.withrawalAmount += 5000;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
-      } else if (user.brokerLevel === "vip_6") {
-        if (user.membersAdded.length >= 18) {
+      }
+    } else if (user.brokerLevel === "vip_6") {
+      if (!user.getWeekySalary.isGetWeeklySalary) {
+        if (addedMembersLastWeek >= 18) {
           user.withrawalAmount += 20000;
-          user.isGetWeekySalary = true;
-          user.membersAdded = [];
-        } else {
-          user.isGetWeekySalary = false;
+          updateWeeklySalaryStatus(userId, true);
         }
       }
     }
+
     await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Broker salary updated",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

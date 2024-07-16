@@ -45,9 +45,14 @@ const userSchema = new mongoose.Schema(
     withrawalAmount: {
       type: Number,
     },
-    isGetWeekySalary: {
-      type: Boolean,
-      default: false,
+    getWeekySalary: {
+      isGetWeeklySalary: {
+        type: Boolean,
+        default: false,
+      },
+      weeklySalaryUpdatedAt: {
+        type: Date,
+      },
     },
     membersAdded: [
       {
@@ -58,7 +63,6 @@ const userSchema = new mongoose.Schema(
         dateAdded: {
           type: Date,
           default: Date.now(),
-          expires: 604800,
         },
       },
     ],

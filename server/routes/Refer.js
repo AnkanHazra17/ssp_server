@@ -12,6 +12,6 @@ router.get("/get-referal-code", auth, generateReferUrl);
 
 router.post("/accept-referal", acceptReferal);
 
-router.post("/check-added-members", checkAddedMembers);
+router.get("/check-added-members", auth, checkAddedMembers);
 
 module.exports = router;
